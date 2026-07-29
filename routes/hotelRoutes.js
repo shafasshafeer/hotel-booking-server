@@ -77,12 +77,11 @@
 
 
 
-
 import express from 'express';
 import { addHotel, listHotel, removedHotel, singleHotel } from '../controllers/hotelController.js';
 import multer from 'multer';
 
-// ✅ Use memory storage only - NO disk storage
+// Use memory storage
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
@@ -97,37 +96,20 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { 
-        fileSize: 10 * 1024 * 1024 // 10MB
-    }
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 const hotelRouter = express.Router();
 
-// Add error handling for multer
-hotelRouter.post('/add', (req, res, next) => {
-    upload.single('image')(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            if (err.code === 'FILE_TOO_LARGE') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'File too large. Maximum size is 10MB'
-                });
-            }
-            return res.status(400).json({
-                success: false,
-                message: err.message
-            });
-        } else if (err) {
-            return res.status(500).json({
-                success: false,
-                message: err.message
-            });
-        }
-        next();
+// ✅ Add a test route
+hotelRouter.get('/test', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'Hotel route is working!' 
     });
-}, addHotel);
+});
 
+hotelRouter.post('/add', upload.single('image'), addHotel);
 hotelRouter.get('/list', listHotel);
 hotelRouter.get('/rooms/:id', singleHotel);
 hotelRouter.post('/remove', removedHotel);
